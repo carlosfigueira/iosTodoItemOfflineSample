@@ -7,7 +7,6 @@
 # Pods/
 .DS_Store
 DerivedData/
-WindowsAzureMobileServices.framework/
 xcuserdata/
 xcshareddata/
 
