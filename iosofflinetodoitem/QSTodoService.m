@@ -16,7 +16,7 @@
 
 #import "QSTodoService.h"
 #import <WindowsAzureMobileServices/WindowsAzureMobileServices.h>
-
+#import "QSAppDelegate.h"
 
 #pragma mark * Private interace
 
@@ -25,6 +25,7 @@
 
 @property (nonatomic, strong)   MSTable *table;
 @property (nonatomic)           NSInteger busyCount;
+@property (nonatomic, strong)   MSSyncTable *syncTable;
 
 @end
 
@@ -62,8 +63,15 @@
         // Add a Mobile Service filter to enable the busy indicator
         self.client = [client clientWithFilter:self];
         
+        QSAppDelegate *delegate = (QSAppDelegate *)[[UIApplication sharedApplication] delegate];
+        NSManagedObjectContext *context = delegate.managedObjectContext;
+        MSCoreDataStore *store = [[MSCoreDataStore alloc] initWithManagedObjectContext:context];
+        
+        self.client.syncContext = [[MSSyncContext alloc] initWithDelegate:nil dataSource:store callback:nil];
+        
         // Create an MSTable instance to allow us to work with the TodoItem table
         self.table = [_client tableWithName:@"TodoItem"];
+        self.syncTable = [_client syncTableWithName:@"TodoItem"];
         
         self.table.systemProperties = MSSystemPropertyCreatedAt | MSSystemPropertyVersion;
 
@@ -79,31 +87,53 @@
     // Create a predicate that finds items where complete is false
     NSPredicate * predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
     
-    // Query the TodoItem table and update the items property with the results from the service
-    [self.table readWithPredicate:predicate completion:^(NSArray *results, NSInteger totalCount, NSError *error)
-    {
-        [self logErrorIfNotNil:error];
+    [self.syncTable purgeWithQuery:nil completion:^(NSError *error) {
+        if (error) {
+            [self logErrorIfNotNil:error];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completion();
+            });
+            return;
+        }
         
-        items = [results mutableCopy];
-        
-        // Let the caller know that we finished
-        completion();
+        MSQuery *query = [self.syncTable queryWithPredicate:predicate];
+        [self.syncTable pullWithQuery:query completion:^(NSError *error) {
+            if (error) {
+                [self logErrorIfNotNil:error];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion();
+                });
+                return;
+            }
+            
+            [query orderByAscending:@"text"];
+            [query readWithCompletion:^(NSArray *results, NSInteger totalCount, NSError *error) {
+                [self logErrorIfNotNil:error];
+                
+                items = [results mutableCopy];
+                
+                // Let the caller know that we finished
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    completion();
+                });
+            }];
+        }];
     }];
-    
 }
 
 -(void)addItem:(NSDictionary *)item completion:(QSCompletionWithIndexBlock)completion
 {
     // Insert the item into the TodoItem table and add to the items array on completion
-    [self.table insert:item completion:^(NSDictionary *result, NSError *error)
-    {
+    [self.syncTable insert:item completion:^(NSDictionary *result, NSError *error) {
         [self logErrorIfNotNil:error];
         
         NSUInteger index = [items count];
         [(NSMutableArray *)items insertObject:result atIndex:index];
         
         // Let the caller know that we finished
-        completion(index);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(index);
+        });
     }];
 }
 
@@ -115,14 +145,14 @@
     [mutableItems replaceObjectAtIndex:index withObject:item];
     
     // Update the item in the TodoItem table and remove from the items array on completion
-    [self.table update:item completion:^(NSDictionary *item, NSError *error) {
-        
+    [self.syncTable update:item completion:^(NSError *error) {
         [self logErrorIfNotNil:error];
         
+        NSInteger index = -1;
         if (!error) {
             BOOL isComplete = [[item objectForKey:@"complete"] boolValue];
             NSString *remoteId = [item objectForKey:@"id"];
-            NSInteger index = [items indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+            index = [items indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
                 return [remoteId isEqualToString:[obj objectForKey:@"id"]];
             }];
 
@@ -130,12 +160,12 @@
             {
                 [mutableItems removeObjectAtIndex:index];
             }
-
-            // Let the caller know that we have finished
-            completion(index);
-        } else {
-            completion(-1);
         }
+        
+        // Let the caller know that we have finished
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion(index);
+        });
     }];
 }
 
