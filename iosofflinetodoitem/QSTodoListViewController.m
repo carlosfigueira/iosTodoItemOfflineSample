@@ -128,7 +128,7 @@
                                           withRowAnimation:UITableViewRowAnimationTop];
                 } else {
                     [label setTextColor:[UIColor blackColor]];
-                    [self refresh];
+                    [[self tableView] reloadData];
                 }
             }];
         }

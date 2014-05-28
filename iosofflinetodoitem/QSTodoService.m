@@ -23,7 +23,6 @@
 
 @interface QSTodoService() <MSFilter>
 
-@property (nonatomic, strong)   MSTable *table;
 @property (nonatomic)           NSInteger busyCount;
 @property (nonatomic, strong)   MSSyncTable *syncTable;
 
@@ -70,11 +69,8 @@
         self.client.syncContext = [[MSSyncContext alloc] initWithDelegate:nil dataSource:store callback:nil];
         
         // Create an MSTable instance to allow us to work with the TodoItem table
-        self.table = [_client tableWithName:@"TodoItem"];
         self.syncTable = [_client syncTableWithName:@"TodoItem"];
         
-        self.table.systemProperties = MSSystemPropertyCreatedAt | MSSystemPropertyVersion;
-
         self.items = [[NSMutableArray alloc] init];
         self.busyCount = 0;
     }
