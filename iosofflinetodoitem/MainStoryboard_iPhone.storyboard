@@ -103,26 +103,14 @@
                                     <outlet property="delegate" destination="mJz-vN-fkf" id="V45-Nh-96V"/>
                                 </connections>
                             </textField>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Created at:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="To4-nH-TH1">
-                                <rect key="frame" x="20" y="132" width="86" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="lHS-CX-ZRB">
-                                <rect key="frame" x="114" y="132" width="186" height="21"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Completed:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="B3f-O6-1S8">
-                                <rect key="frame" x="20" y="182" width="90" height="21"/>
+                                <rect key="frame" x="20" y="131" width="90" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" id="Gr6-Ge-fZ0">
-                                <rect key="frame" x="118" y="175" width="123" height="29"/>
+                                <rect key="frame" x="118" y="124" width="123" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="Yes"/>
@@ -135,7 +123,6 @@
                     <navigationItem key="navigationItem" id="e7n-Hs-GZ7"/>
                     <connections>
                         <outlet property="itemComplete" destination="Gr6-Ge-fZ0" id="4yq-xK-J9g"/>
-                        <outlet property="itemCreatedAt" destination="lHS-CX-ZRB" id="e3z-I3-sNz"/>
                         <outlet property="itemText" destination="bKI-i8-zc3" id="Jh2-Pa-Ve2"/>
                     </connections>
                 </viewController>

@@ -42,12 +42,6 @@
 
     BOOL isComplete = [[theItem objectForKey:@"complete"] boolValue];
     [itemComplete setSelectedSegmentIndex:(isComplete ? 0 : 1)];
-    NSDate *created = [theItem objectForKey:@"__createdAt"];
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateStyle:NSDateFormatterShortStyle];
-    if (created) {
-        [itemCreatedAt setText:[dateFormatter stringFromDate:created]];
-    }
 
     [itemComplete addTarget:self
                      action:@selector(completedValueChanged:)

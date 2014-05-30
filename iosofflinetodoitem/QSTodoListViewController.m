@@ -18,11 +18,14 @@
 #import "QSTodoListViewController.h"
 #import "QSTodoService.h"
 #import "QSTodoItemViewController.h"
+#import "QSUIAlertViewWithBlock.h"
 
 #pragma mark * Private Interface
 
 
-@interface QSTodoListViewController ()
+@interface QSTodoListViewController () <UIAlertViewDelegate> {
+    MSSyncItemBlock _block;
+}
 
 // Private properties
 @property (strong, nonatomic)   QSTodoService   *todoService;
@@ -51,7 +54,7 @@
     [super viewDidLoad];
     
     // Create the todoService - this creates the Mobile Service client inside the wrapped service
-    self.todoService = [QSTodoService defaultService];
+    self.todoService = [QSTodoService defaultServiceWithDelegate:self];
     
     // Set the busy method
     UIActivityIndicatorView *indicator = self.activityIndicator;
@@ -238,5 +241,43 @@
     [self refresh];
 }
 
+- (void)tableOperation:(MSTableOperation *)operation onComplete:(MSSyncItemBlock)completion
+{
+    [self doOperation:operation complete:completion];
+}
+
+- (void)doOperation:(MSTableOperation *)operation complete:(MSSyncItemBlock)completion
+{
+    [operation executeWithCompletion:^(NSDictionary *item, NSError *error) {
+        if (error.code == MSErrorPreconditionFailed) {
+            QSUIAlertViewWithBlock *alert = [[QSUIAlertViewWithBlock alloc] initWithCallback:^(NSInteger buttonIndex) {
+                if (buttonIndex == 1) { // Client
+                    NSDictionary *serverItem = [error.userInfo objectForKey:MSErrorServerItemKey];
+                    NSMutableDictionary *adjustedItem = [operation.item mutableCopy];
+                    
+                    [adjustedItem setValue:[serverItem objectForKey:MSSystemColumnVersion] forKey:MSSystemColumnVersion];
+                    operation.item = [adjustedItem copy];
+                    
+                    [self doOperation:operation complete:completion];
+                    return;
+                    
+                } else if (buttonIndex == 2) { // Server
+                    NSDictionary *serverItem = [error.userInfo objectForKey:MSErrorServerItemKey];
+                    completion(serverItem, nil);
+                } else { // Cancel
+                    [operation cancelPush];
+                    completion(nil, error);
+                }
+            }];
+            
+            [alert showAlertWithTitle:@"Server Conflict"
+                              message:@"How do you want to resolve the conflict?"
+                    cancelButtonTitle:@"Cancel"
+                    otherButtonTitles:[NSArray arrayWithObjects:@"Use Client", @"Use Server", nil]];
+        } else {
+            completion(item, error);
+        }
+    }];
+}
 
 @end

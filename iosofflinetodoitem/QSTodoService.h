@@ -35,7 +35,7 @@ typedef void (^QSBusyUpdateBlock) (BOOL busy);
 @property (nonatomic, strong)   MSClient *client;
 @property (nonatomic, copy)     QSBusyUpdateBlock busyUpdate;
 
-+ (QSTodoService *)defaultService;
++ (QSTodoService *)defaultServiceWithDelegate:(id<MSSyncContextDelegate>)delegate;
 
 - (void)refreshDataOnSuccess:(QSCompletionBlock)completion;
 
