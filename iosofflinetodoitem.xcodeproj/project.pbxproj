@@ -27,8 +27,8 @@
 		8740FE1919352A0200F12CAF /* QSTodoItemViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8740FE1819352A0200F12CAF /* QSTodoItemViewController.m */; };
 		A219C5AB19353383000BBCB6 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A219C5AA19353383000BBCB6 /* CoreData.framework */; };
 		A219C5AE193533F5000BBCB6 /* QSTodoDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = A219C5AC193533F5000BBCB6 /* QSTodoDataModel.xcdatamodeld */; };
-		A2ABB3F7193694490061D030 /* WindowsAzureMobileServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2ABB3F6193694490061D030 /* WindowsAzureMobileServices.framework */; };
 		A2ABB4001936AB810061D030 /* QSUIAlertViewWithBlock.m in Sources */ = {isa = PBXBuildFile; fileRef = A2ABB3FF1936AB810061D030 /* QSUIAlertViewWithBlock.m */; };
+		A2E5C14A193E811B001357F0 /* WindowsAzureMobileServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A2E5C149193E811B001357F0 /* WindowsAzureMobileServices.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,9 +59,9 @@
 		8740FE1819352A0200F12CAF /* QSTodoItemViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QSTodoItemViewController.m; sourceTree = "<group>"; };
 		A219C5AA19353383000BBCB6 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		A219C5AD193533F5000BBCB6 /* QSTodoDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = QSTodoDataModel.xcdatamodel; sourceTree = "<group>"; };
-		A2ABB3F6193694490061D030 /* WindowsAzureMobileServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WindowsAzureMobileServices.framework; sourceTree = "<group>"; };
 		A2ABB3FE1936AB810061D030 /* QSUIAlertViewWithBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = QSUIAlertViewWithBlock.h; sourceTree = "<group>"; };
 		A2ABB3FF1936AB810061D030 /* QSUIAlertViewWithBlock.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = QSUIAlertViewWithBlock.m; sourceTree = "<group>"; };
+		A2E5C149193E811B001357F0 /* WindowsAzureMobileServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = WindowsAzureMobileServices.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -73,7 +73,7 @@
 				03D1001E16EC579A0005A1A9 /* UIKit.framework in Frameworks */,
 				03D1002016EC579A0005A1A9 /* Foundation.framework in Frameworks */,
 				03D1002216EC579A0005A1A9 /* CoreGraphics.framework in Frameworks */,
-				A2ABB3F7193694490061D030 /* WindowsAzureMobileServices.framework in Frameworks */,
+				A2E5C14A193E811B001357F0 /* WindowsAzureMobileServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,7 +100,7 @@
 		03D1001C16EC579A0005A1A9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				A2ABB3F6193694490061D030 /* WindowsAzureMobileServices.framework */,
+				A2E5C149193E811B001357F0 /* WindowsAzureMobileServices.framework */,
 				A219C5AA19353383000BBCB6 /* CoreData.framework */,
 				03D1001D16EC579A0005A1A9 /* UIKit.framework */,
 				03D1001F16EC579A0005A1A9 /* Foundation.framework */,

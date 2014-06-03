@@ -80,23 +80,14 @@
 
 - (void)refreshDataOnSuccess:(QSCompletionBlock)completion
 {
-    [self.syncTable purgeWithQuery:nil completion:^(NSError *error) {
-        if (error) {
-            [self logErrorIfNotNil:error];
-            
-            // Load what we previously had
-            [self loadLocalDataWithCompletion:completion];
-            return;
-        }
+    // Create a predicate that finds items where complete is false
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
+    MSQuery *query = [self.syncTable queryWithPredicate:predicate];
+    
+    [self.syncTable pullWithQuery:query completion:^(NSError *error) {
+        [self logErrorIfNotNil:error];
         
-        // Create a predicate that finds items where complete is false
-        NSPredicate * predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
-        MSQuery *query = [self.syncTable queryWithPredicate:predicate];
-        
-        [self.syncTable pullWithQuery:query completion:^(NSError *error) {
-            [self logErrorIfNotNil:error];
-            [self loadLocalDataWithCompletion:completion];
-        }];
+        [self loadLocalDataWithCompletion:completion];
     }];
 }
 

@@ -29,7 +29,6 @@
 
 // Private properties
 @property (strong, nonatomic)   QSTodoService   *todoService;
-@property (nonatomic)           BOOL            useRefreshControl;
 @property (nonatomic)           NSInteger       editedItemIndex;
 @property (strong, nonatomic)   NSMutableDictionary *editedItem;
 
@@ -41,10 +40,6 @@
 
 @implementation QSTodoListViewController
 
-@synthesize todoService;
-@synthesize itemText;
-@synthesize activityIndicator;
-@synthesize editedItem, editedItemIndex;
 
 #pragma mark * UIView methods
 
@@ -63,7 +58,8 @@
         if (busy)
         {
             [indicator startAnimating];
-        } else
+        }
+        else
         {
             [indicator stopAnimating];
         }
@@ -71,8 +67,9 @@
     
     [[self navigationItem] setTitle:@"Azure Mobile Services"];
 
-    // add the refresh control to the table (iOS6+ only)
-    [self addRefreshControl];
+    [self.refreshControl addTarget:self
+                            action:@selector(onRefresh:)
+                  forControlEvents:UIControlEventValueChanged];
     
     // load the data
     [self refresh];
@@ -81,14 +78,11 @@
 - (void) refresh
 {
     // only activate the refresh control if the feature is available
-    if (self.useRefreshControl == YES) {
-        [self.refreshControl beginRefreshing];
-    }
+    [self.refreshControl beginRefreshing];
+
     [self.todoService refreshDataOnSuccess:^
     {
-        if (self.useRefreshControl == YES) {
-            [self.refreshControl endRefreshing];
-        }
+        [self.refreshControl endRefreshing];
         [self.tableView reloadData];
     }];
 }
@@ -98,42 +92,44 @@
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([[segue identifier] isEqualToString:@"detailSegue"]) {
         QSTodoItemViewController *ivc = (QSTodoItemViewController *)[segue destinationViewController];
-        NSDictionary *item = [self.todoService.items objectAtIndex:self.editedItemIndex];
-        self.editedItem = [[NSMutableDictionary alloc] initWithDictionary:item];
-        [ivc setItem:self.editedItem];
+        ivc.item = self.editedItem;
     }
 }
 
 - (void)viewWillAppear:(BOOL)animated {
-    NSInteger lastEditedItemIndex = self.editedItemIndex;
-    NSDictionary *lastEditedItem = self.editedItem;
-    self.editedItemIndex = -1;
-    self.editedItem = nil;
-    if (lastEditedItem && lastEditedItemIndex >= 0) {
+    if (self.editedItem && self.editedItemIndex >= 0) {
         // Returning from the details view controller
-        NSDictionary *item = [self.todoService.items objectAtIndex:lastEditedItemIndex];
-        BOOL isComplete = [[lastEditedItem objectForKey:@"complete"] boolValue];
-        BOOL changed = [[item objectForKey:@"complete"] boolValue] != isComplete;
-        changed = changed || ![[item objectForKey:@"text"] isEqualToString:[lastEditedItem objectForKey:@"text"]];
+        NSDictionary *item = [self.todoService.items objectAtIndex:self.editedItemIndex];
+        
+        BOOL changed = ![item isEqualToDictionary:self.editedItem];
         if (changed) {
+            [self.tableView setUserInteractionEnabled:NO];
+            
             // Change the appearance to look greyed out until we remove the item
-            UITableView *tableView = [self tableView];
-            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:lastEditedItemIndex inSection:0];
-            UILabel *label = (UILabel *)[[tableView cellForRowAtIndexPath:indexPath] viewWithTag:1];
-            label.textColor = [UIColor grayColor];
+            NSIndexPath *indexPath = [NSIndexPath indexPathForRow:self.editedItemIndex inSection:0];
+            
+            UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+            cell.textLabel.textColor = [UIColor grayColor];
 
             // Ask the todoService to update the item, and remove the row if it's been completed
-            [self.todoService updateItem:lastEditedItem atIndex:lastEditedItemIndex completion:^(NSUInteger index) {
-                if (isComplete) {
+            [self.todoService updateItem:self.editedItem atIndex:self.editedItemIndex completion:^(NSUInteger index) {
+                if ([[self.editedItem objectForKey:@"complete"] boolValue]) {
                     // Remove the row from the UITableView
-                    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:index inSection:0];
                     [self.tableView deleteRowsAtIndexPaths:@[ indexPath ]
                                           withRowAnimation:UITableViewRowAnimationTop];
                 } else {
-                    [label setTextColor:[UIColor blackColor]];
-                    [[self tableView] reloadData];
+                    [self.tableView reloadRowsAtIndexPaths:[NSArray arrayWithObject:indexPath]
+                                          withRowAnimation:UITableViewRowAnimationAutomatic];
                 }
+                
+                [self.tableView setUserInteractionEnabled:YES];
+                
+                self.editedItem = nil;
+                self.editedItemIndex = -1;
             }];
+        } else {
+            self.editedItem = nil;
+            self.editedItemIndex = -1;
         }
     }
 }
@@ -142,7 +138,8 @@
 
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     self.editedItemIndex = [indexPath row];
-    self.editedItem = [self.todoService.items objectAtIndex:[indexPath row]];
+    self.editedItem = [[self.todoService.items objectAtIndex:[indexPath row]] mutableCopy];
+    
     [self performSegueWithIdentifier:@"detailSegue" sender:self];
 }
 
@@ -161,12 +158,9 @@
         cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:CellIdentifier];
     }
     
-    // Set the label on the cell and make sure the label color is black (in case this cell
-    // has been reused and was previously greyed out
-    UILabel *label = (UILabel *)[cell viewWithTag:1];
-    label.textColor = [UIColor blackColor];
     NSDictionary *item = [self.todoService.items objectAtIndex:indexPath.row];
-    label.text = [item objectForKey:@"text"];
+    cell.textLabel.text = [item objectForKey:@"text"];
+    cell.textLabel.textColor = [UIColor blackColor];
     
     return cell;
 }
@@ -199,12 +193,12 @@
 
 - (IBAction)onAdd:(id)sender
 {
-    if (itemText.text.length  == 0)
+    if (self.itemText.text.length == 0)
     {
         return;
     }
     
-    NSDictionary *item = @{ @"text" : itemText.text, @"complete" : @NO };
+    NSDictionary *item = @{ @"text" : self.itemText.text, @"complete" : @NO };
     UITableView *view = self.tableView;
     [self.todoService addItem:item completion:^(NSUInteger index)
     {
@@ -213,28 +207,12 @@
                     withRowAnimation:UITableViewRowAnimationTop];
     }];
     
-    itemText.text = @"";
+    self.itemText.text = @"";
 }
 
 
 #pragma mark * iOS Specific Code
 
-// This method will add the UIRefreshControl to the table view if
-// it is available, ie, we are running on iOS 6+
-
-- (void)addRefreshControl
-{
-    Class refreshControlClass = NSClassFromString(@"UIRefreshControl");
-    if (refreshControlClass != nil)
-    {
-        // the refresh control is available, let's add it
-        self.refreshControl = [[UIRefreshControl alloc] init];
-        [self.refreshControl addTarget:self
-                                action:@selector(onRefresh:)
-                      forControlEvents:UIControlEventValueChanged];
-        self.useRefreshControl = YES;
-    }
-}
 
 - (void)onRefresh:(id) sender
 {
@@ -256,7 +234,7 @@
                     NSMutableDictionary *adjustedItem = [operation.item mutableCopy];
                     
                     [adjustedItem setValue:[serverItem objectForKey:MSSystemColumnVersion] forKey:MSSystemColumnVersion];
-                    operation.item = [adjustedItem copy];
+                    operation.item = adjustedItem;
                     
                     [self doOperation:operation complete:completion];
                     return;
