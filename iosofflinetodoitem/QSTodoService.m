@@ -37,19 +37,19 @@
 @synthesize items;
 
 
-+ (QSTodoService *)defaultService
++ (QSTodoService *)defaultServiceWithDelegate:(id<MSSyncContextDelegate>)delegate
 {
     // Create a singleton instance of QSTodoService
     static QSTodoService* service;
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        service = [[QSTodoService alloc] init];
+        service = [[QSTodoService alloc] initWithDelegate:delegate];
     });
     
     return service;
 }
 
--(QSTodoService *)init
+-(QSTodoService *)initWithDelegate:(id<MSSyncContextDelegate>)syncDelegate
 {
     self = [super init];
     
@@ -66,7 +66,7 @@
         NSManagedObjectContext *context = delegate.managedObjectContext;
         MSCoreDataStore *store = [[MSCoreDataStore alloc] initWithManagedObjectContext:context];
         
-        self.client.syncContext = [[MSSyncContext alloc] initWithDelegate:nil dataSource:store callback:nil];
+        self.client.syncContext = [[MSSyncContext alloc] initWithDelegate:syncDelegate dataSource:store callback:nil];
         
         // Create an MSTable instance to allow us to work with the TodoItem table
         self.syncTable = [_client syncTableWithName:@"TodoItem"];
@@ -81,39 +81,31 @@
 - (void)refreshDataOnSuccess:(QSCompletionBlock)completion
 {
     // Create a predicate that finds items where complete is false
-    NSPredicate * predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
+    MSQuery *query = [self.syncTable queryWithPredicate:predicate];
     
-    [self.syncTable purgeWithQuery:nil completion:^(NSError *error) {
-        if (error) {
-            [self logErrorIfNotNil:error];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                completion();
-            });
-            return;
-        }
+    [self.syncTable pullWithQuery:query completion:^(NSError *error) {
+        [self logErrorIfNotNil:error];
         
-        MSQuery *query = [self.syncTable queryWithPredicate:predicate];
-        [self.syncTable pullWithQuery:query completion:^(NSError *error) {
-            if (error) {
-                [self logErrorIfNotNil:error];
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion();
-                });
-                return;
-            }
-            
-            [query orderByAscending:@"text"];
-            [query readWithCompletion:^(NSArray *results, NSInteger totalCount, NSError *error) {
-                [self logErrorIfNotNil:error];
-                
-                items = [results mutableCopy];
-                
-                // Let the caller know that we finished
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    completion();
-                });
-            }];
-        }];
+        [self loadLocalDataWithCompletion:completion];
+    }];
+}
+
+- (void) loadLocalDataWithCompletion:(QSCompletionBlock)completion
+{
+    NSPredicate * predicate = [NSPredicate predicateWithFormat:@"complete == NO"];
+    MSQuery *query = [self.syncTable queryWithPredicate:predicate];
+
+    [query orderByAscending:@"text"];
+    [query readWithCompletion:^(NSArray *results, NSInteger totalCount, NSError *error) {
+        [self logErrorIfNotNil:error];
+        
+        items = [results mutableCopy];
+        
+        // Let the caller know that we finished
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion();
+        });
     }];
 }
 

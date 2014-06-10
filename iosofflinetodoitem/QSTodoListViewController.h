@@ -16,7 +16,7 @@
 
 #import <UIKit/UIKit.h>
 
-@interface QSTodoListViewController : UITableViewController
+@interface QSTodoListViewController : UITableViewController <MSSyncContextDelegate>
 
 @property (weak, nonatomic) IBOutlet UITextField                *itemText;
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView    *activityIndicator;

@@ -11,14 +11,11 @@
 @interface QSTodoItemViewController ()
 
 @property (nonatomic, strong) IBOutlet UITextField *itemText;
-@property (nonatomic, strong) IBOutlet UILabel *itemCreatedAt;
 @property (nonatomic, strong) IBOutlet UISegmentedControl *itemComplete;
 
 @end
 
 @implementation QSTodoItemViewController
-
-@synthesize item, itemText, itemComplete, itemCreatedAt;
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
@@ -38,20 +35,14 @@
     [nav setTitle:@"Todo Item"];
 
     NSDictionary *theItem = [self item];
-    [itemText setText:[theItem objectForKey:@"text"]];
+    [self.itemText setText:[theItem objectForKey:@"text"]];
 
     BOOL isComplete = [[theItem objectForKey:@"complete"] boolValue];
-    [itemComplete setSelectedSegmentIndex:(isComplete ? 0 : 1)];
-    NSDate *created = [theItem objectForKey:@"__createdAt"];
-    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
-    [dateFormatter setDateStyle:NSDateFormatterShortStyle];
-    if (created) {
-        [itemCreatedAt setText:[dateFormatter stringFromDate:created]];
-    }
+    [self.itemComplete setSelectedSegmentIndex:(isComplete ? 0 : 1)];
 
-    [itemComplete addTarget:self
-                     action:@selector(completedValueChanged:)
-           forControlEvents:UIControlEventValueChanged];
+    [self.itemComplete addTarget:self
+                          action:@selector(completedValueChanged:)
+                forControlEvents:UIControlEventValueChanged];
 }
 
 - (void)completedValueChanged:(id)sender {
@@ -59,9 +50,8 @@
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
-    NSMutableDictionary *theItem = [self item];
-    [theItem setValue:[itemText text] forKey:@"text"];
-    [theItem setValue:[NSNumber numberWithBool:itemComplete.selectedSegmentIndex == 0] forKey:@"complete"];
+    [self.item setValue:[self.itemText text] forKey:@"text"];
+    [self.item setValue:[NSNumber numberWithBool:self.itemComplete.selectedSegmentIndex == 0] forKey:@"complete"];
 }
 
 - (void)didReceiveMemoryWarning
